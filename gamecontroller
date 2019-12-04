@@ -1,0 +1,367 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class GameController : MonoBehaviour
+{
+    public GameObject cubePrefab;
+    Vector3 cubePosition;
+    Vector3 newPosition;
+    float turnLength = 3;
+    float takeTurn;
+    float gameLength = 60;
+    int gridHeight, gridWidth;
+    int score = 0;
+    int scoreMin = 0;
+    bool activeCube;
+    bool loseState;
+    GameObject[,] grid;
+    Color[] colorArray = { Color.red, Color.blue, Color.magenta, Color.yellow, Color.green };
+   GameObject[,] freeArray;
+    GameObject nextCube;
+    Vector3 nextCubePos = new Vector3(7, 10, 0);
+    int freeCube, lockedCube;
+    int nextCubeDestination, randomPlace; // (???)
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        loseState = false;
+        turnLength = 2.0f;
+        takeTurn = turnLength;
+        gameLength = 60f;
+        gridHeight = 5;
+        gridWidth = 8;
+
+        for (int h = 0; h < gridHeight; h++)
+        {
+            for (int w = 0; w < gridWidth; w++)
+            {
+                cubePosition = new Vector3(h * 2, w * 2, 0);
+                grid[h, w] = Instantiate(cubePrefab, cubePosition, Quaternion.identity);
+                grid[h, w].GetComponent<CubeController>().myH = h;
+                grid[h, w].GetComponent<CubeController>().myW = w;
+            }
+        }
+
+        // colorArray[Random.Range(0, 5)];
+        int randomColor;
+        randomColor = Random.Range(0, 5);
+
+        freeCube = 8;
+        lockedCube = 0;
+
+
+    }
+
+    // methods start here
+    public void ProcessClick(GameObject cubeClicked, int h, int w)
+    {
+
+        if (grid[h, w].GetComponent<Renderer>().material.color != Color.white || grid[h, w].GetComponent<Renderer>().material.color != Color.black)
+        {
+            activeCube = true;
+            if (grid[h + 1, w].GetComponent<Renderer>().material.color == Color.white)
+            {
+                // i've set this to some bullshit for now
+                grid[h + 1, w].GetComponent<Renderer>().material.color = new Color();
+            }
+
+            if (grid[h + 1, w + 1].GetComponent<Renderer>().material.color == Color.white)
+            {
+                grid[h + 1, w + 1].GetComponent<Renderer>().material.color = new Color();
+            }
+
+            if (grid[h, w + 1].GetComponent<Renderer>().material.color == Color.white)
+            {
+                grid[h, w + 1].GetComponent<Renderer>().material.color = new Color();
+            }
+
+            if (grid[h - 1, w].GetComponent<Renderer>().material.color == Color.white)
+            {
+                grid[h - 1, w].GetComponent<Renderer>().material.color = new Color();
+            }
+
+            if (grid[h - 1, w - 1].GetComponent<Renderer>().material.color == Color.white)
+            {
+                grid[h - 1, w - 1].GetComponent<Renderer>().material.color = new Color();
+            }
+
+            if (grid[h, w - 1].GetComponent<Renderer>().material.color == Color.white)
+            {
+                grid[h, w - 1].GetComponent<Renderer>().material.color = new Color();
+            }
+
+            if (grid[h - 1, w + 1].GetComponent<Renderer>().material.color == Color.white)
+            {
+                grid[h - 1, w + 1].GetComponent<Renderer>().material.color = new Color();
+            }
+
+            if (grid[h + 1, w - 1].GetComponent<Renderer>().material.color == Color.white)
+            {
+                grid[h + 1, w - 1].GetComponent<Renderer>().material.color = new Color();
+            }
+        }
+    }
+
+
+    void CreateNextCube()
+    {
+        if (nextCube == null)
+        {
+            nextCube = Instantiate(cubePrefab, nextCubePos, Quaternion.identity);
+        }
+        int randomColor = Random.Range(0, colorArray.Length);
+        nextCube.GetComponent<Renderer>().material.color = colorArray[ randomColor ];
+        nextCube.GetComponent<CubeController>().nextCube = true;
+        nextCube.GetComponent<CubeController>().colorValue = Mathf.Pow(2, randomColor);
+
+
+        /*  0 -> 1
+            1 -> 2
+            2 -> 4
+            3 -> 8
+            4 -> 16; */
+
+    }
+
+    void MakeBlackPlus(int w, int h) {
+
+        if (w == 0 || h == 0 || w == gridWidth - 1 || h == gridHeight - 1) {
+            return; 
+        } 
+
+
+        grid[w, h].GetComponent<Renderer>().material.color = Color.black;
+        grid[w+1, h].GetComponent<Renderer>().material.color = Color.black;
+        grid[w-1, h].GetComponent<Renderer>().material.color = Color.black;
+        grid[w, h+1].GetComponent<Renderer>().material.color = Color.black;
+        grid[w, h-1].GetComponent<Renderer>().material.color = Color.black;
+
+    }
+
+
+    bool RainbowPlus(int w, int h)
+        {
+
+        Color a = grid[w, h].GetComponent<Renderer>().material.color;
+        Color b = grid[w + 1, h].GetComponent<Renderer>().material.color;
+        Color c = grid[w - 1, h].GetComponent<Renderer>().material.color;
+        Color d = grid[w, h + 1].GetComponent<Renderer>().material.color;
+        Color e = grid[w, h - 1].GetComponent<Renderer>().material.color;
+
+        return false;
+
+
+        }
+
+    bool SamePlus(int w, int h)
+    {
+            if (grid[w, h].GetComponent<Renderer>().material.color != Color.white &&
+            grid[w, h].GetComponent<Renderer>().material.color != Color.black &&
+            grid[w, h].GetComponent<Renderer>().material.color == grid[w + 1, h].GetComponent<Renderer>().material.color &&
+                grid[w, h].GetComponent<Renderer>().material.color == grid[w - 1, h].GetComponent<Renderer>().material.color &&
+                grid[w, h].GetComponent<Renderer>().material.color == grid[w, h + 1].GetComponent<Renderer>().material.color &&
+                grid[w, h].GetComponent<Renderer>().material.color == grid[w, h - 1].GetComponent<Renderer>().material.color)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+    }
+
+void CheckForPlus(int myH, int myW)
+    {
+
+        for (int w = 1; w < gridWidth - 1; w++)
+        {
+            for(int h = 1; h < gridHeight - 1; h++)
+            {
+                if(RainbowPlus (w, h))
+                {
+                    score += 10;
+                    MakeBlackPlus(w, h);
+                }
+
+                if(SamePlus (w, h))
+                {
+                    score += 5;
+                    MakeBlackPlus(w, h);
+                }
+            }
+        }
+    }
+
+
+    void TimeRunsOut()
+    {
+        if (gameLength == 0 && score >= 1)
+        {
+            loseState = false;
+            print("You win!");
+        }
+        else if (gameLength == 0 && score == 0)
+        {
+            loseState = true;
+        }
+    }
+
+    void ChangeColor (GameObject myCube, Color color)
+    {
+        if(myCube == null)
+        {
+            loseState = true;
+            CheckGameState();
+        }
+
+        else
+        {
+            myCube.GetComponent<Renderer>().material.color = color;
+            Destroy(nextCube);
+            nextCube = null;
+        }
+
+    }
+
+    void PlaceCube(int h)
+    {
+
+        GameObject freeCube = FindFree(h);
+
+        ChangeColor(freeCube, nextCube.GetComponent<Renderer>().material.color);
+
+        /* int w = FindFree(h);
+
+        if(w == -1)
+        {
+            loseState = true;
+            CheckGameState();
+        }
+        else
+        {
+            grid[w, h].GetComponent<Renderer>().material.color = nextCube.GetComponent<Renderer>().material.color;
+            Destroy(nextCube);
+            nextCube = null;
+        } */
+    }
+
+    GameObject PickFree(List<GameObject> freeCube)
+    {
+        if(freeCube.Count == 0)
+        {
+            return null;
+        }
+
+        return freeCube[Random.Range(0, freeCube.Count)];
+    }
+
+    GameObject FindFree ()
+    {
+        List<GameObject> freeCube = new List<GameObject>();
+
+        for (int w = 0; w < gridWidth; w++)
+        {
+            for(int h = 0; h < gridHeight; h++){
+
+                if(grid[w,h].GetComponent<Renderer>().material.color == Color.white)
+                {
+                    freeCube.Add(grid[w, h]);
+                }
+
+            }
+        }
+
+        return PickFree(freeCube);
+    }
+
+    GameObject FindFree(int h)
+    {
+        List<GameObject> freeCube = new List<GameObject> ();
+
+        for(int w = 0; w < gridWidth; w++)
+        {
+            if(grid[w,h].GetComponent<Renderer>().material.color == Color.white)
+            {
+                freeCube.Add(grid[w, h]);
+            }
+        }
+
+        if(freeCube.Count == 0)
+        {
+            return null;
+        }
+
+        GameObject randomFree = freeCube[Random.Range(0, freeCube.Count)];
+
+        return PickFree(freeCube);
+
+    }
+
+    void DetectKeyInput()
+    {
+        int keyPressed = 0;
+
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            keyPressed = 1;
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            keyPressed = 2;
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha3))
+        {
+            keyPressed = 3;
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha4))
+        {
+            keyPressed = 4;
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha5))
+        {
+            keyPressed = 5;
+        }
+
+        if(nextCube != null && keyPressed != 0)
+        {
+            PlaceCube(keyPressed - 1);
+        }
+    }
+
+    void CheckGameState()
+    {
+        if (loseState)
+        {
+            gameLength = 0;
+            print("You Lose!");
+        }
+    }
+
+    // Update is called once per frame
+
+    void Update()
+    {
+        DetectKeyInput();
+        // CheckForPlus(int myH, int myW);
+
+        if (Time.time > turnLength * takeTurn)
+        {
+            takeTurn++;
+
+            if (nextCube != null)
+            {
+                score -= 1;
+                // AddBlackCube();
+                if (score == scoreMin)
+                {
+                    score = scoreMin;
+                }
+
+            }
+
+        }
+    }
+}
